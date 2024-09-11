@@ -126,8 +126,8 @@ public class KonverterKlasseliste {
             if (cell == null) {
                 return null;
             } else {
-                String tekst = fjernVrangSpace(cell.getStringCellValue());
-                return tekst.trim();
+                String tekst = fjernVrangSpace(cell.getStringCellValue()).trim();
+                return tekst.isEmpty() ? null : tekst;
             }
         } catch (Exception e) {
             System.err.println(String.format("Ignorerer kolonne %d i rad %d: %s", cellnum, elevRad.getRowNum(), e.getMessage()));
@@ -157,10 +157,8 @@ public class KonverterKlasseliste {
     private void skrivHeader(StringBuffer buffer) {
         buffer.append("First Name").append(CSV_SEPARATOR);
         buffer.append("Last Name").append(CSV_SEPARATOR);
-        buffer.append("Phone 1 - Label").append(CSV_SEPARATOR);
-        buffer.append("Phone 1 - Value").append(CSV_SEPARATOR);
-        buffer.append("E-mail 1 - Label").append(CSV_SEPARATOR);
-        buffer.append("E-mail 1 - Value");
+        buffer.append("Telephone").append(CSV_SEPARATOR);
+        buffer.append("Email");
         buffer.append('\n');
     }
 
@@ -182,18 +180,13 @@ public class KonverterKlasseliste {
         buffer.append(String.format("(%s %s %s)", oppføring.fornavn, oppføring.etternavn(), oppføring.klasse())).append(CSV_SEPARATOR);
 
         if (telefonForelder != null) {
-            buffer.append("Mobile").append(CSV_SEPARATOR);
             buffer.append(telefonnummer(telefonForelder)).append(CSV_SEPARATOR);
         } else {
-            buffer.append(CSV_SEPARATOR);
             buffer.append(CSV_SEPARATOR);
         }
 
         if (epostForelder != null) {
-            buffer.append("Other").append(CSV_SEPARATOR);
             buffer.append(muligTomTekst(epostForelder));
-        } else {
-            buffer.append(CSV_SEPARATOR);
         }
 
         buffer.append('\n');
@@ -209,8 +202,11 @@ public class KonverterKlasseliste {
         }
 
         var trimmetNummer = telefonnummer.replace(" ", "");
-        if (trimmetNummer.length() == 8) {
-            return "47" + trimmetNummer;
+        if (trimmetNummer.length() > 8 && !trimmetNummer.startsWith("47")) {
+            System.err.println("Støtter ikke utenlandsk telefonnummer: " + telefonnummer);
+        }
+        if (trimmetNummer.length() == 10 && trimmetNummer.startsWith("47")) {
+            return trimmetNummer.substring(2);
         } else {
             return trimmetNummer;
         }
