@@ -1,6 +1,4 @@
-///usr/bin/env jbang -C -Xlint:-options "$0" "$@" ; exit $?
-//DEPS org.apache.poi:poi-ooxml:5.3.0
-//DEPS org.apache.logging.log4j:log4j-core:2.23.1
+package no.rystad.klasseliste.konverter;
 
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.poifs.crypt.Decryptor;

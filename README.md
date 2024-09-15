@@ -8,9 +8,11 @@ Kun norske telefonnummer støttes.
 
 ## Bruk
 
-[Installer JBang](https://www.jbang.dev/documentation/guide/latest/installation.html).
+Du må ha installert [Java](https://adoptium.net/installation/) 21 eller nyere
+og [Maven](https://maven.apache.org/install.html).
 
 Kjør programmet med:
 ```shell
-./KonverterKlasseliste.java "<full-sti-til-fil>" [<passord>]
+mvn package
+./konverter-klasseliste.sh "<full-sti-til-fil>" [<passord>]
 ```
