@@ -2,7 +2,7 @@
 
 Dette programmet konverterer klasseliste eksportert fra iSkole til et format som kan importeres i Google Kontakter.
 
-Kryptert XLSX-format og ukryptert XLS-format støttes. Dette kan utvides senere.
+"Nytt" XLSX-format og gammelt XLS-format støttes, både med og uten passord/kryptering.
 
 Kun norske telefonnummer støttes.
 

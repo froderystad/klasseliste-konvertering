@@ -1,8 +1,11 @@
 package no.rystad.klasseliste.konverter;
 
+import org.apache.poi.EncryptedDocumentException;
+import org.apache.poi.hssf.record.crypto.Biff8EncryptionKey;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.poifs.crypt.Decryptor;
 import org.apache.poi.poifs.crypt.EncryptionInfo;
+import org.apache.poi.poifs.filesystem.OfficeXmlFileException;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -25,7 +28,7 @@ class ExcelRegneark {
     Workbook openWorkbook() throws IOException, GeneralSecurityException, FeilPassord, IkkeStøttetFilendelse {
         var filendelse = filnavn.substring(filnavn.indexOf('.'));
         if (filendelse.endsWith("xlsx")) {
-            return readNewFormatEncrypted();
+            return readNewFormat();
         } else if (filendelse.endsWith("xls")) {
             return readOldFormat();
         } else {
@@ -33,11 +36,16 @@ class ExcelRegneark {
         }
     }
 
-    private Workbook readNewFormatEncrypted() throws IOException, GeneralSecurityException, FeilPassord {
+    private Workbook readNewFormat() throws IOException, GeneralSecurityException, FeilPassord {
         try (InputStream fis = new FileInputStream(filnavn);
              POIFSFileSystem poifs = new POIFSFileSystem(fis)) {
             Decryptor decryptor = getDecryptor(poifs);
             return new XSSFWorkbook(decryptor.getDataStream(poifs));
+        } catch (OfficeXmlFileException e) {
+            // ikke kryptert
+            try (InputStream fis = new FileInputStream(filnavn)) {
+                return new XSSFWorkbook(fis);
+            }
         }
     }
 
@@ -52,9 +60,14 @@ class ExcelRegneark {
     }
 
     private Workbook readOldFormat() throws IOException {
-        try (InputStream fis = new FileInputStream(filnavn)) {
-            return new HSSFWorkbook(fis);
+        try (InputStream fis = new FileInputStream(filnavn);
+             POIFSFileSystem poifs = new POIFSFileSystem(fis)) {
+            Biff8EncryptionKey.setCurrentUserPassword(passord);
+            return new HSSFWorkbook(poifs);
+        } finally {
+            Biff8EncryptionKey.setCurrentUserPassword(null);
         }
+
     }
 
     static class FeilPassord extends Exception {
