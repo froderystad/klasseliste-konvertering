@@ -59,7 +59,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>no.rystad.klasseliste.konverter.KonverterKlasseliste</mainClass>
+                            <mainClass>no.rystad.klasseliste.konverter.KonverterKlasselisteCommand</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

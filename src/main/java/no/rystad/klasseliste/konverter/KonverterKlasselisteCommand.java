@@ -7,11 +7,11 @@ import java.io.OutputStream;
 import java.security.GeneralSecurityException;
 import java.util.List;
 
-public class KonverterKlasseliste {
+public class KonverterKlasselisteCommand {
     private final ExcelRegneark excelRegneark;
     private final CsvSkriver csvSkriver;
 
-    KonverterKlasseliste(String filnavn, String passord, OutputStream outputStream) {
+    KonverterKlasselisteCommand(String filnavn, String passord, OutputStream outputStream) {
         this.excelRegneark = new ExcelRegneark(filnavn, passord);
         this.csvSkriver = new CsvSkriver(outputStream);
     }
@@ -40,7 +40,7 @@ public class KonverterKlasseliste {
         }
 
         try {
-            new KonverterKlasseliste(filnavn, passord, System.out).konverter();
+            new KonverterKlasselisteCommand(filnavn, passord, System.out).konverter();
         } catch (ExcelRegneark.FeilPassord e) {
             System.err.println("Feil passord!");
             System.exit(1);
