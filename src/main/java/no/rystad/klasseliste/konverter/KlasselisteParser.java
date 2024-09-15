@@ -12,10 +12,10 @@ import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-class Klasseliste {
+class KlasselisteParser {
     private final Workbook workbook;
 
-    Klasseliste(Workbook workbook) {
+    KlasselisteParser(Workbook workbook) {
         this.workbook = workbook;
     }
 

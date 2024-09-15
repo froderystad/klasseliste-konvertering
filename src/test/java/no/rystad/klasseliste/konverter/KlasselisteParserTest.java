@@ -10,7 +10,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class KlasselisteTest {
+class KlasselisteParserTest {
     @ParameterizedTest
     @CsvSource({
             "/test-klasseliste-encrypted.xlsx,test123",
@@ -22,8 +22,8 @@ class KlasselisteTest {
         }
 
         try (Workbook workbook = new ExcelRegneark(testfilnavn(filnavn), passord).openWorkbook()) {
-            Klasseliste klasseliste = new Klasseliste(workbook);
-            List<Oppføring> oppføringer = klasseliste.lesElevOppføringer();
+            var klasselisteParser = new KlasselisteParser(workbook);
+            List<Oppføring> oppføringer = klasselisteParser.lesElevOppføringer();
 
             assertThat(oppføringer).hasSize(1)
                     .satisfiesExactly(

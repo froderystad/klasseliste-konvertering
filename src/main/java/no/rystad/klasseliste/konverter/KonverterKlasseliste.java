@@ -23,7 +23,7 @@ public class KonverterKlasseliste {
 
     private List<Oppføring> lesElevOppføringerFraFil() throws IOException, GeneralSecurityException, ExcelRegneark.FeilPassord, ExcelRegneark.IkkeStøttetFilendelse {
         try (Workbook workbook = excelRegneark.openWorkbook()) {
-            return new Klasseliste(workbook).lesElevOppføringer();
+            return new KlasselisteParser(workbook).lesElevOppføringer();
         }
     }
 
