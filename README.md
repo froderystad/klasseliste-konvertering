@@ -11,8 +11,8 @@ Kun norske telefonnummer støttes.
 Du må ha installert [Java](https://adoptium.net/installation/) 21 eller nyere
 og [Maven](https://maven.apache.org/install.html).
 
-Kjør programmet med:
+Kjør programmet og skriv til CSV-fil med:
 ```shell
 mvn package
-./konverter-klasseliste.sh "<full-sti-til-fil>" [<passord>]
+./konverter-klasseliste.sh "<full-sti-til-fil>" [<passord>] > klasseliste.csv
 ```

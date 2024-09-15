@@ -1,18 +1,10 @@
 package no.rystad.klasseliste.konverter;
 
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Spliterator;
-import java.util.Spliterators;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 public class KonverterKlasseliste {
     private static final char CSV_SEPARATOR = ',';
@@ -30,69 +22,7 @@ public class KonverterKlasseliste {
 
     private List<Oppføring> lesElevOppføringerFraFil() throws IOException, GeneralSecurityException, ExcelRegneark.FeilPassord, ExcelRegneark.IkkeStøttetFilendelse {
         try (Workbook workbook = excelRegneark.openWorkbook()) {
-            return lesElevOppføringer(workbook);
-        }
-    }
-
-    private List<Oppføring> lesElevOppføringer(Workbook workbook) {
-        Sheet exportSheet = workbook.getSheetAt(0);
-        Iterator<Row> rowIterator = exportSheet.rowIterator();
-        verifyHeaders(rowIterator.next());
-
-        return iteratorToStream(rowIterator)
-                .map(this::lesElevOppføring)
-                .toList();
-    }
-
-    private void verifyHeaders(Row headerRow) {
-        if (!"Klasse".equals(getNullableStringCellValue(headerRow, 0))) {
-            throw new IllegalArgumentException("Filen mangler gyldig header");
-        }
-    }
-
-    private static Stream<Row> iteratorToStream(Iterator<Row> rowIterator) {
-        return StreamSupport.stream(
-                Spliterators.spliteratorUnknownSize(rowIterator, Spliterator.ORDERED),
-                false
-        );
-    }
-
-    private Oppføring lesElevOppføring(Row elevRad) {
-        return new Oppføring(
-                getNullableStringCellValue(elevRad, 0),
-                getNullableStringCellValue(elevRad, 1),
-                getNullableStringCellValue(elevRad, 2),
-                getNullableStringCellValue(elevRad, 3),
-                getNullableStringCellValue(elevRad, 4),
-                getNullableStringCellValue(elevRad, 5),
-                getNullableStringCellValue(elevRad, 6),
-                getNullableStringCellValue(elevRad, 7),
-                getNullableStringCellValue(elevRad, 8)
-        );
-    }
-
-    private static String getNullableStringCellValue(Row elevRad, int cellnum) {
-        Cell cell = elevRad.getCell(cellnum);
-        try {
-            if (cell == null) {
-                return null;
-            } else {
-                String tekst = fjernVrangSpace(cell.getStringCellValue()).trim();
-                return tekst.isEmpty() ? null : tekst;
-            }
-        } catch (Exception e) {
-            System.err.println(String.format("Ignorerer kolonne %d i rad %d: %s", cellnum, elevRad.getRowNum(), e.getMessage()));
-            return null;
-        }
-    }
-
-    private static String fjernVrangSpace(String tekst) {
-        int vrangSpaceIdx = tekst.indexOf(160);
-        if (vrangSpaceIdx > -1) {
-            char vrangChar = tekst.charAt(vrangSpaceIdx);
-            return tekst.replace(vrangChar, ' ');
-        } else {
-            return tekst;
+            return new Klasseliste(workbook).lesElevOppføringer();
         }
     }
 
@@ -114,10 +44,10 @@ public class KonverterKlasseliste {
     }
 
     private void skrivElev(Oppføring oppføring, StringBuffer buffer) {
-        if (oppføring.navnForelder1 != null) {
+        if (oppføring.navnForelder1() != null) {
             skrivOppføring(oppføring, buffer, oppføring.navnForelder1(), oppføring.telefonForelder1(), oppføring.epostForelder1());
         }
-        if (oppføring.navnForelder2 != null) {
+        if (oppføring.navnForelder2() != null) {
             skrivOppføring(oppføring, buffer, oppføring.navnForelder2(), oppføring.telefonForelder2(), oppføring.epostForelder2());
         }
     }
@@ -128,7 +58,7 @@ public class KonverterKlasseliste {
         }
 
         buffer.append(muligTomTekst(forelderNavn)).append(CSV_SEPARATOR);
-        buffer.append(String.format("(%s %s %s)", oppføring.fornavn, oppføring.etternavn(), oppføring.klasse())).append(CSV_SEPARATOR);
+        buffer.append(String.format("(%s %s %s)", oppføring.fornavn(), oppføring.etternavn(), oppføring.klasse())).append(CSV_SEPARATOR);
 
         if (telefonForelder != null) {
             buffer.append(telefonnummer(telefonForelder)).append(CSV_SEPARATOR);
@@ -161,17 +91,6 @@ public class KonverterKlasseliste {
         } else {
             return trimmetNummer;
         }
-    }
-
-    record Oppføring(String klasse,
-                     String etternavn,
-                     String fornavn,
-                     String navnForelder1,
-                     String telefonForelder1,
-                     String epostForelder1,
-                     String navnForelder2,
-                     String telefonForelder2,
-                     String epostForelder2) {
     }
 
     public static void main(String[] args) throws Exception {
