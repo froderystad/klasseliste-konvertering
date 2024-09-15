@@ -50,7 +50,7 @@ class CsvSkriver {
         buffer.append(String.format("(%s %s %s)", oppføring.fornavn(), oppføring.etternavn(), oppføring.klasse())).append(CSV_SEPARATOR);
 
         if (telefonForelder != null) {
-            buffer.append(telefonnummer(telefonForelder)).append(CSV_SEPARATOR);
+            buffer.append(formaterTelefonnummer(telefonForelder)).append(CSV_SEPARATOR);
         } else {
             buffer.append(CSV_SEPARATOR);
         }
@@ -66,19 +66,20 @@ class CsvSkriver {
         return navn == null ? "" : navn;
     }
 
-    private static String telefonnummer(String telefonnummer) {
+    static String formaterTelefonnummer(String telefonnummer) {
         if (telefonnummer == null) {
             return "";
         }
 
         var trimmetNummer = telefonnummer.replace(" ", "");
-        if (trimmetNummer.length() > 8 && !trimmetNummer.startsWith("47")) {
-            System.err.println("Støtter ikke utenlandsk telefonnummer: " + telefonnummer);
-        }
-        if (trimmetNummer.length() == 10 && trimmetNummer.startsWith("47")) {
-            return trimmetNummer.substring(2);
+        return formaterTrimmetTelefonnummer(trimmetNummer);
+    }
+
+    private static String formaterTrimmetTelefonnummer(String telefonnummer) {
+        if (telefonnummer.length() == 8 || telefonnummer.startsWith("+")) {
+            return telefonnummer;
         } else {
-            return trimmetNummer;
+            return "+" + telefonnummer;
         }
     }
 }
