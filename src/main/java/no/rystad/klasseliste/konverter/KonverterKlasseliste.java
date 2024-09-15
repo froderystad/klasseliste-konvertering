@@ -32,31 +32,29 @@ public class KonverterKlasseliste {
         this.passord = passord;
     }
 
-    private void konverter() throws IOException, GeneralSecurityException {
+    private void konverter() throws IOException, GeneralSecurityException, FeilPassord, IkkeStøttetFilendelse {
         List<Oppføring> elever = lesElevOppføringerFraFil();
         skrivForesatteSomCsvForKontaktImport(elever);
     }
 
-    private List<Oppføring> lesElevOppføringerFraFil() throws IOException, GeneralSecurityException {
+    private List<Oppføring> lesElevOppføringerFraFil() throws IOException, GeneralSecurityException, FeilPassord, IkkeStøttetFilendelse {
         try (Workbook workbook = openWorkbook()) {
             return lesElevOppføringer(workbook);
         }
     }
 
-    private Workbook openWorkbook() throws IOException, GeneralSecurityException {
+    Workbook openWorkbook() throws IOException, GeneralSecurityException, FeilPassord, IkkeStøttetFilendelse {
         var filendelse = filnavn.substring(filnavn.indexOf('.'));
         if (filendelse.endsWith("xlsx")) {
             return readNewFormatEncrypted();
         } else if (filendelse.endsWith("xls")) {
             return readOldFormat();
         } else {
-            System.err.println(String.format("Ikke støttet filformat: %s", filendelse));
-            System.exit(1);
-            throw new IllegalStateException(); // will never get here
+            throw new IkkeStøttetFilendelse(filendelse);
         }
     }
 
-    private Workbook readNewFormatEncrypted() throws IOException, GeneralSecurityException {
+    private Workbook readNewFormatEncrypted() throws IOException, GeneralSecurityException, FeilPassord {
         try (InputStream fis = new FileInputStream(filnavn);
              POIFSFileSystem poifs = new POIFSFileSystem(fis)) {
             Decryptor decryptor = getDecryptor(poifs);
@@ -64,13 +62,12 @@ public class KonverterKlasseliste {
         }
     }
 
-    private Decryptor getDecryptor(POIFSFileSystem poifs) throws IOException, GeneralSecurityException {
+    private Decryptor getDecryptor(POIFSFileSystem poifs) throws IOException, GeneralSecurityException, FeilPassord {
         EncryptionInfo encryptionInfo = new EncryptionInfo(poifs);
         Decryptor decryptor = Decryptor.getInstance(encryptionInfo);
 
         if (!decryptor.verifyPassword(passord)) {
-            System.err.println("Feil passord!");
-            System.exit(1);
+            throw new FeilPassord();
         }
         return decryptor;
     }
@@ -210,18 +207,31 @@ public class KonverterKlasseliste {
         }
     }
 
-    private record Oppføring(String klasse,
-                             String etternavn,
-                             String fornavn,
-                             String navnForelder1,
-                             String telefonForelder1,
-                             String epostForelder1,
-                             String navnForelder2,
-                             String telefonForelder2,
-                             String epostForelder2) {
+    record Oppføring(String klasse,
+                     String etternavn,
+                     String fornavn,
+                     String navnForelder1,
+                     String telefonForelder1,
+                     String epostForelder1,
+                     String navnForelder2,
+                     String telefonForelder2,
+                     String epostForelder2) {
     }
 
-    ;
+    static class FeilPassord extends Exception {
+    }
+
+    static class IkkeStøttetFilendelse extends Exception {
+        private final String filendelse;
+
+        IkkeStøttetFilendelse(String filendelse) {
+            this.filendelse = filendelse;
+        }
+
+        String filendelse() {
+            return filendelse;
+        }
+    }
 
     public static void main(String[] args) throws Exception {
         if (args.length < 1 || args.length > 2) {
@@ -235,7 +245,15 @@ public class KonverterKlasseliste {
             passord = args[1];
         }
 
-        new KonverterKlasseliste(filnavn, passord).konverter();
+        try {
+            new KonverterKlasseliste(filnavn, passord).konverter();
+        } catch (FeilPassord e) {
+            System.err.println("Feil passord!");
+            System.exit(1);
+        } catch (IkkeStøttetFilendelse e) {
+            System.err.println(String.format("Ikke støttet filformat: %s", e.filendelse()));
+            System.exit(1);
+        }
     }
 
     private static void printUsage() {
