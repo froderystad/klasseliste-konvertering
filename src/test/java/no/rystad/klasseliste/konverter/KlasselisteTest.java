@@ -27,17 +27,7 @@ class KlasselisteTest {
 
             assertThat(oppføringer).hasSize(1)
                     .satisfiesExactly(
-                            forelder -> new Oppføring(
-                                    "1A",
-                                    "Testesen",
-                                    "Test",
-                                    "Mamma Testesen",
-                                    "4790807060",
-                                    "mamma@test.com",
-                                    "Pappa Testesen",
-                                    "987654321",
-                                    "pappa@test.com"
-                            )
+                            forelder -> Testdata.klasseliste.getFirst()
                     );
         }
     }
