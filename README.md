@@ -1,15 +1,19 @@
 # Klasseliste-konverterer
 
-Dette programmet konverterer klasseliste i Excel til et format som kan importeres i Google Kontakter.
+Dette programmet konverterer klasselister fra Excel-fil til et CSV-format som kan importeres i Google Kontakter.
 
-### Innformat
+"Nytt" XLSX-format og gammelt XLS-format støttes, både med og uten passord/kryptering.
+
+### Inn-format
+
+Inn-formatet har én linje per elev.
 
 | Klasse | Etternavn | Fornavn | Navn forelder 1 | Telefon forelder 1 | E-post forelder 1 | Navn forelder 2 | Telefon forelder 2 | E-post forelder 2 |
 |--------|-----------|---------|-----------------|--------------------|-------------------|-----------------|--------------------|-------------------|
 
-"Nytt" XLSX-format og gammelt XLS-format støttes, både med og uten passord/kryptering.
+### Ut-format
 
-### Utformat
+Ut-formatet har én linje per foresatt.
 
 ```text
 First Name,Last Name,Telephone,Email
