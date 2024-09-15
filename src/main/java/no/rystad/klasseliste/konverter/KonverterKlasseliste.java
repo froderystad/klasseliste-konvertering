@@ -1,18 +1,11 @@
 package no.rystad.klasseliste.konverter;
 
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.poifs.crypt.Decryptor;
-import org.apache.poi.poifs.crypt.EncryptionInfo;
-import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.security.GeneralSecurityException;
 import java.util.Iterator;
 import java.util.List;
@@ -24,57 +17,20 @@ import java.util.stream.StreamSupport;
 public class KonverterKlasseliste {
     private static final char CSV_SEPARATOR = ',';
 
-    private String filnavn;
-    private String passord;
+    private final ExcelRegneark excelRegneark;
 
     public KonverterKlasseliste(String filnavn, String passord) {
-        this.filnavn = filnavn;
-        this.passord = passord;
+        this.excelRegneark = new ExcelRegneark(filnavn, passord);
     }
 
-    private void konverter() throws IOException, GeneralSecurityException, FeilPassord, IkkeStøttetFilendelse {
+    private void konverter() throws IOException, GeneralSecurityException, ExcelRegneark.FeilPassord, ExcelRegneark.IkkeStøttetFilendelse {
         List<Oppføring> elever = lesElevOppføringerFraFil();
         skrivForesatteSomCsvForKontaktImport(elever);
     }
 
-    private List<Oppføring> lesElevOppføringerFraFil() throws IOException, GeneralSecurityException, FeilPassord, IkkeStøttetFilendelse {
-        try (Workbook workbook = openWorkbook()) {
+    private List<Oppføring> lesElevOppføringerFraFil() throws IOException, GeneralSecurityException, ExcelRegneark.FeilPassord, ExcelRegneark.IkkeStøttetFilendelse {
+        try (Workbook workbook = excelRegneark.openWorkbook()) {
             return lesElevOppføringer(workbook);
-        }
-    }
-
-    Workbook openWorkbook() throws IOException, GeneralSecurityException, FeilPassord, IkkeStøttetFilendelse {
-        var filendelse = filnavn.substring(filnavn.indexOf('.'));
-        if (filendelse.endsWith("xlsx")) {
-            return readNewFormatEncrypted();
-        } else if (filendelse.endsWith("xls")) {
-            return readOldFormat();
-        } else {
-            throw new IkkeStøttetFilendelse(filendelse);
-        }
-    }
-
-    private Workbook readNewFormatEncrypted() throws IOException, GeneralSecurityException, FeilPassord {
-        try (InputStream fis = new FileInputStream(filnavn);
-             POIFSFileSystem poifs = new POIFSFileSystem(fis)) {
-            Decryptor decryptor = getDecryptor(poifs);
-            return new XSSFWorkbook(decryptor.getDataStream(poifs));
-        }
-    }
-
-    private Decryptor getDecryptor(POIFSFileSystem poifs) throws IOException, GeneralSecurityException, FeilPassord {
-        EncryptionInfo encryptionInfo = new EncryptionInfo(poifs);
-        Decryptor decryptor = Decryptor.getInstance(encryptionInfo);
-
-        if (!decryptor.verifyPassword(passord)) {
-            throw new FeilPassord();
-        }
-        return decryptor;
-    }
-
-    private Workbook readOldFormat() throws IOException {
-        try (InputStream fis = new FileInputStream(filnavn)) {
-            return new HSSFWorkbook(fis);
         }
     }
 
@@ -218,21 +174,6 @@ public class KonverterKlasseliste {
                      String epostForelder2) {
     }
 
-    static class FeilPassord extends Exception {
-    }
-
-    static class IkkeStøttetFilendelse extends Exception {
-        private final String filendelse;
-
-        IkkeStøttetFilendelse(String filendelse) {
-            this.filendelse = filendelse;
-        }
-
-        String filendelse() {
-            return filendelse;
-        }
-    }
-
     public static void main(String[] args) throws Exception {
         if (args.length < 1 || args.length > 2) {
             printUsage();
@@ -247,10 +188,10 @@ public class KonverterKlasseliste {
 
         try {
             new KonverterKlasseliste(filnavn, passord).konverter();
-        } catch (FeilPassord e) {
+        } catch (ExcelRegneark.FeilPassord e) {
             System.err.println("Feil passord!");
             System.exit(1);
-        } catch (IkkeStøttetFilendelse e) {
+        } catch (ExcelRegneark.IkkeStøttetFilendelse e) {
             System.err.println(String.format("Ikke støttet filformat: %s", e.filendelse()));
             System.exit(1);
         }
